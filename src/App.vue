@@ -1,28 +1,13 @@
 <template>
-<!-- This HTML code does not need to be changed, but you should move it around to break it up into components. -->
 <div id="app" class="container">
     <div class="page-header">
         <h1>My Favorite Books</h1>
     </div>
-    <!-- TODO: make this element into a new component template -->
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Add New Books</h3>
-        </div>
-        <div class="panel-body">
-            <form id="form" class="form-inline" @submit.prevent="addBook">
-                <div class="form-group">
-                    <label for="bookTitle">Title:</label>
-                    <input type="text" id="bookTitle" class="form-control" v-model="newBookInput.title">
-                </div>
-                <div class="form-group">
-                    <label for="bookAuthor">Author:</label>
-                    <input type="text" id="bookAuthor" class="form-control" v-model="newBookInput.author">
-                </div>
-                <input type="submit" class="btn btn-primary" value="Add Book">
-            </form>
-        </div>
-    </div>
+    <!-- Use component's template instead of writing it directly, pass parameters as attributes -->
+    <new-book-form
+        :inputFields="newBookInput"
+        :onSubmit="addBook">
+    </new-book-form>
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Book List</h3>
@@ -38,25 +23,12 @@
                         <th></th>
                     </tr>
                 </thead>
-                <!-- TODO: make this element into a new component template -->
-                <tbody v-for="book in books">
-                    <tr>
-                        <td class="first" rowspan="2"><img :src="book.imgUrl" /></td>
-                        <td class="top"><a :href="book.url">{{book.title}}</a></td>
-                        <td class="top">{{book.author}}</td>
-                        <td class="top">{{book.year}}</td>
-                        <td class="top">
-                            <span class="glyphicon glyphicon-trash"
-                                  aria-hidden="true"
-                                  @click="removeBook(book)">
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">{{book.description}}</td>
-                        <td></td>
-                    </tr>
-                </tbody>
+                <!-- Use component's template instead of writing it directly, pass parameters as attributes -->
+                <book-info v-for="book in books"
+                    :key="book.title"
+                    :book="book"
+                    :onRemove="removeBook">
+                </book-info>
             </table>
         </div>
     </div>
@@ -64,10 +36,11 @@
 </template>
 
 <script>
-// This code will NEED to updated to use the JSON data structure returned from the Google Books API
-
 // use Firebase to save data user entered
 import Firebase from 'firebase';
+// use local components, note .vue extension is assumed so not necessary to include
+import NewBookForm from './components/NewBookForm'
+import BookInfo from './components/BookInfo'
 
 var config = {
     apiKey: "AIzaSyALmW2B2aJOtwCbikL6fI3RyfZejpKvgYI",
@@ -82,7 +55,7 @@ var booksRef = db.ref('books')
 
 // export anonymous object from this module so it can be accessed by others when imported
 export default {
-    name: 'App',
+    name: 'app',
     // NOTE in a component, data must be a function that returns a NEW version of the values
     data () {
         return {
@@ -98,7 +71,9 @@ export default {
     },
     // components (HTML, CSS, and JS) used by this app
     components: {
-        // TODO: add your new component(s) here
+        // imported components to use in HTML template
+        NewBookForm,
+        BookInfo
     },
     // functions you want to be called from HTML code
     methods: {
@@ -122,14 +97,14 @@ export default {
                       .then(data => {
                             // only one result is returned to reduce data load, but it still is returned as an Array
                             var bookInfo = data.items[0]
-                            // TODO: replace dummy data below with correct fields within given JSON data
+                            // include data retrieved from JSON API in book fields
                             booksRef.push({
                                 title: title,
                                 author: author,
-                                year: '2001',                         // TODO: find book's publication date
-                                description: 'Interesting book',      // TODO: find book's description
-                                url: 'https://google.com',            // TODO: find link to the book's information
-                                imgUrl: this.makeURLSecure('http://files.selar.co/product-images/2017/products/demo/preorder-physical-product-selar.co-59d1e525c3a96.jpg'), // TODO: find link to the book's thumbnail image
+                                year: bookInfo.volumeInfo.publishedDate.split('-')[0],
+                                description: bookInfo.volumeInfo.description,
+                                url: this.makeURLSecure(bookInfo.volumeInfo.infoLink),
+                                imgUrl: this.makeURLSecure(bookInfo.volumeInfo.imageLinks.thumbnail)
                             })
                        })
                       .catch(error => console.log(error))
@@ -148,36 +123,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/*
- * This CSS code will need to be changed to verify components have different styles.
- * You will also need to move it around to break it up into components.
- */
-
-/* TODO: move styles to the appropriate component where they would most closely apply */
-$formColor: cornflowerblue;
-$submitColor: hotpink;
-$tableColor: rebeccapurple;
+/* load global variable definitions so colors can be managed in a single place if needed */
+@import "./assets/css/theme.scss";
 
 #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     color: $formColor;
     margin-top: 20px;
-}
-
-.btn-primary {
-    background-color: $submitColor;
-}
-
-.first {
-    width: 1%;
-}
-
-.top {
-    height: 1.5em;
-}
-
-img {
-    height: 200px;
 }
 
 .table {

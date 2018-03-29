@@ -1,6 +1,7 @@
 // only need to import bootstrap here for all components to have access to it
 import 'bootstrap/dist/css/bootstrap.css'
 // import site specific global styles AFTER bootstrap
+import './assets/css/theme.scss'
 import './assets/css/style.css'
 
 import Vue from 'vue'
